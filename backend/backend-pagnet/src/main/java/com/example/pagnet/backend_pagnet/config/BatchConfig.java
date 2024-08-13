@@ -21,9 +21,11 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.transform.Range;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -61,15 +63,14 @@ public class BatchConfig {
 
     @StepScope
     @Bean
-    FlatFileItemReader<TransacaoCNAB> reader() {
-        FileSystemResource fileSystemResource = new FileSystemResource("/home/gabriel/www/backend-pagnet/backend/backend-pagnet/files/CNAB.txt");
+    FlatFileItemReader<TransacaoCNAB> reader(@Value("#{jobParameters['cnabFile']}")Resource resource) {
         return new FlatFileItemReaderBuilder<TransacaoCNAB>()
                 .name("reader")
-                .resource(fileSystemResource)
+                .resource(resource)
                 .fixedLength()
                 .columns(new Range(1, 1), new Range(2, 9), new Range(10, 19),
                         new Range(20, 30), new Range(31, 42), new Range(43, 48),
-                        new Range(49, 62), new Range(63, 81))
+                        new Range(49, 62), new Range(63, 80))
                 .names("tipo", "data", "valor", "cpf", "cartao", "hora",
                         "donoDaLoja", "nomeDaLoja")
                 .targetType(TransacaoCNAB.class)
@@ -108,9 +109,14 @@ public class BatchConfig {
         return new JdbcBatchItemWriterBuilder<Transacao>()
                 .dataSource(dataSource)
                 .sql("""
-                        INSERT INTO transacoes (tipo, data, valor, cpf, cartao, hora, dono_da_loja, nome_da_loja) " +
-                        "VALUES (:tipo, :data, :valor, :cpf, :cartao, :hora, :donoDaLoja, :nomeDaLoja)
-                        """)
+              INSERT INTO transacao (
+                tipo, data, valor, cpf, cartao,
+                hora, dono_loja, nome_loja
+              ) VALUES (
+                :tipo, :data, :valor, :cpf, :cartao,
+                :hora, :donoDaLoja, :nomeDaLoja
+              )
+            """)
                 .beanMapped()
                 .build();
     }
