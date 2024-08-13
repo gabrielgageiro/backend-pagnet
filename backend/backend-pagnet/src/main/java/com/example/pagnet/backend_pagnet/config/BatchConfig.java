@@ -71,7 +71,7 @@ public class BatchConfig {
                         new Range(20, 30), new Range(31, 42), new Range(43, 48),
                         new Range(49, 62), new Range(63, 80))
                 .names("tipo", "data", "valor", "cpf", "cartao", "hora",
-                        "donoDaLoja", "nomeDaLoja")
+                        "donoLoja", "nomeLoja")
                 .targetType(TransacaoCNAB.class)
                 .build()
                 ;
@@ -118,7 +118,7 @@ public class BatchConfig {
                 hora, dono_loja, nome_loja
               ) VALUES (
                 :tipo, :data, :valor, :cpf, :cartao,
-                :hora, :donoDaLoja, :nomeDaLoja
+                :hora, :donoLoja, :nomeLoja
               )
             """)
                 .beanMapped()
