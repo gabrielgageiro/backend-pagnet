@@ -1,11 +1,10 @@
 package com.example.pagnet.backend_pagnet.config;
 
+import com.example.pagnet.backend_pagnet.transacao.TipoTransacao;
 import com.example.pagnet.backend_pagnet.transacao.Transacao;
 import com.example.pagnet.backend_pagnet.transacao.TransacaoCNAB;
-import org.springframework.batch.core.ItemReadListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -94,10 +93,15 @@ public class BatchConfig {
     @Bean
     ItemProcessor<TransacaoCNAB, Transacao> processor() {
         return item -> {
-            var transacao = new Transacao(
-                    item.tipo(), null, item.valor().divide(BigDecimal.valueOf(100), RoundingMode.HALF_DOWN),
+            TipoTransacao tipoTransacao = TipoTransacao.findByTipo(item.tipo());
+            BigDecimal valorNormalizado = item.valor()
+                    .divide(new BigDecimal(100), RoundingMode.HALF_DOWN)
+                    .multiply(tipoTransacao.getSinal());
+
+            Transacao transacao = new Transacao(
+                    item.tipo(), null, valorNormalizado,
                     item.cpf(), item.cartao(), null,
-                    item.donoDaLoja(), item.nomeDaLoja())
+                    item.donoDaLoja().trim(), item.nomeDaLoja().trim())
                     .withData(item.data())
                     .withHora(item.hora());
             return transacao;
