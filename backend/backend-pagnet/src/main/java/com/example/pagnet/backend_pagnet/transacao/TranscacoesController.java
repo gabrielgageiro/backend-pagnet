@@ -15,13 +15,8 @@ public class TranscacoesController {
     }
 
     @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file) {
-        try {
-            arquivosService.upload(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erro ao processar arquivo";
-        }
+    public String upload(@RequestParam("file") MultipartFile file) throws Exception {
+        arquivosService.upload(file);
         return "Processando";
     }
 }
