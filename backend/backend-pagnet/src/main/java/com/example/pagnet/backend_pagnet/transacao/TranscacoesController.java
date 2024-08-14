@@ -10,8 +10,8 @@ import java.util.List;
 @RequestMapping("/api/transacoes")
 public class TranscacoesController {
 
-    private ArquivosService arquivosService;
-    private TransacaoService transacaoService;
+    private final ArquivosService arquivosService;
+    private final TransacaoService transacaoService;
 
     public TranscacoesController(ArquivosService arquivosService, TransacaoService transacaoService) {
         this.arquivosService = arquivosService;
