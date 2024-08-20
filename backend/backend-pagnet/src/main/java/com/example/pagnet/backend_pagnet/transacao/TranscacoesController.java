@@ -19,12 +19,14 @@ public class TranscacoesController {
     }
 
     @PostMapping("/upload")
+    @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
     public String upload(@RequestParam("file") MultipartFile file) throws Exception {
         arquivosService.upload(file);
         return "Processando";
     }
 
     @GetMapping()
+    @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
     public List<TransacaoWrapper> list() {
         return transacaoService.getTotaisByLoja();
     }
