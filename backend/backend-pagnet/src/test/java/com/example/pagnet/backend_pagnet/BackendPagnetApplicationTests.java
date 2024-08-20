@@ -50,7 +50,7 @@ class TransacaoServiceTest {
 		assertEquals(new BigDecimal("300.00"), result.get(0).total());
 		assertEquals(new BigDecimal("300.00"), result.get(1).total());
 		result.forEach(wrapper ->{
-			if(wrapper.nomeDaLoja().equals("Loja1")){
+			if(wrapper.nomeLoja().equals("Loja1")){
 				assertEquals(2, wrapper.transacoes().size());
 				assertTrue(wrapper.transacoes().contains(transacao1));
 				assertTrue(wrapper.transacoes().contains(transacao2));

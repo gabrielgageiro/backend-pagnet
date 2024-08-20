@@ -1,47 +1,69 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "react-aria-components";
 import GitHubButton from "./components/GitHubButton";
+import axios from "axios";
 
 function App() {
-  const [file, setFile] = useState<File | null>(null);
-  const [transactions, setTransactions] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
+  interface Transaction {
+    tipo: number;
+    data: string;
+    valor: number;
+    cpf: string;
+    cartao: string;
+    hora: string;
+    donoLoja: string;
+    nomeLoja: string;
+  }
 
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
+  interface TransactionWrapper {
+    total: number;
+    nomeLoja: string;
+    transacoes: Transaction[];
+  }
+  const [file, setFile] = useState<null>(null);
+  const [TransactionWrapper, setTransactionWrapper] = useState([]);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    if (e.dataTransfer?.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
-  }, []);
-  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target && e.target?.files[0]) {
       setFile(e.target.files[0]);
     }
   };
-  
+
+  const getTransactions = async () => {
+    axios.get("http://localhost:8080/api/transacoes").then((response) => {
+      console.log(response.data);
+      setTransactionWrapper(response.data);
+    });
+  }
+
+  const uploadFile = async (file: File) => {
+    if(!file){
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    axios.post("http://localhost:8080/api/transacoes/upload", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
+
+  const formatCurrency = (value) => {
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(parseFloat(value));
+
+    return formattedValue;
+  };
+
+  useEffect(() => {
+    getTransactions();
+  }, []);
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 mx-auto">
       
       <GitHubButton href="https://github.com/gabrielgageiro/backend-pagnet"/>
       
@@ -58,7 +80,7 @@ function App() {
           className="bg-blue-500 text-white px-4 py-2 rounded"
           onPress={() => {
             console.log('enviando arquivo', file)
-            // chamar a API para enviar o arquivo
+            uploadFile(file);
           }}
         >
           Enviar Arquivo
@@ -73,52 +95,62 @@ function App() {
       </div>
 
       <div
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         className={`border-2 border-dashed p-4 mb-4 ${
-          isDragging ? "border-blue-500 bg-blue-50" : "border-bla"
+            !file ? "hidden" : ""
         }`}
       >
-        {file ? file.name : "Arraste e solte o arquivo aqui"}
+        <span className="font-bold">Arquivo: {file? file.name : ""}</span>
       </div>
 
       <h2 className="text-xl font-bold mb-2">Transações</h2>
-      <div className="border rounded overflow-hidden">
-        <div className="bg-gray-100 p-2 font-bold flex justify-between">
-          <span>NOME DA LOJA</span>
-          <span>Total: R$ 0,00</span>
-        </div>
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="p-2 text-left">Cartao</th>
-              <th className="p-2 text-left">CPF</th>
-              <th className="p-2 text-left">Data</th>
-              <th className="p-2 text-left">Dono da Loja</th>
-              <th className="p-2 text-left">Hora</th>
-              <th className="p-2 text-left">Nome da Loja</th>
-              <th className="p-2 text-left">Tipo</th>
-              <th className="p-2 text-left">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction, index) => (
-              <tr key={index}>
-                <td className="p-2">{transaction.cartao}</td>
-                <td className="p-2">{transaction.cpf}</td>
-                <td className="p-2">{transaction.data}</td>
-                <td className="p-2">{transaction.donoDaLoja}</td>
-                <td className="p-2">{transaction.hora}</td>
-                <td className="p-2">{transaction.nomeDaLoja}</td>
-                <td className="p-2">{transaction.tipo}</td>
-                <td className="p-2">{transaction.valor}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="bg-white shadow-md rounded-md p-4">
+        {TransactionWrapper.length == 0 ? (
+            <p className="mb-4 text-gray-500 text-center">Sem transações disponíveis.</p>
+        ) : (
+            TransactionWrapper.map((wrapper, key) => (
+                <li
+                    key={key}
+                    className="mb-4 p-4 border-b border-gray-300 flex flex-col"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-xl font-semibold">{wrapper.nomeLoja}</div>
+                    <div className={`font-semibold`}>
+                      Total: {formatCurrency(parseFloat(wrapper.total))}
+                    </div>
+                  </div>
+
+                  <table className="table-auto w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-2">Cartão</th>
+                      <th className="px-4 py-2">CPF</th>
+                      <th className="px-4 py-2">Data</th>
+                      <th className="px-4 py-2">Dono da Loja</th>
+                      <th className="px-4 py-2">Hora</th>
+                      <th className="px-4 py-2">Nome da Loja</th>
+                      <th className="px-4 py-2">Tipo</th>
+                      <th className="px-4 py-2">Valor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {wrapper.transacoes.map((transacao, index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-100' : ''}>
+                          <td className="px-4 py-2">{transacao.cartao}</td>
+                          <td className="px-4 py-2">{transacao.cpf}</td>
+                          <td className="px-4 py-2">{transacao.data}</td>
+                          <td className="px-4 py-2">{transacao.donoLoja}</td>
+                          <td className="px-4 py-2">{transacao.hora}</td>
+                          <td className="px-4 py-2">{transacao.nomeLoja}</td>
+                          <td className="px-4 py-2">{transacao.tipo}</td>
+                          <td className="px-4 py-2">{formatCurrency(transacao.valor)}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                  </table>
+                </li>
+            ))
+        )}
+      </ul>
     </div>
   );
 }
