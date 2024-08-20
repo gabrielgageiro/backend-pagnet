@@ -98,13 +98,12 @@ public class BatchConfig {
                     .divide(new BigDecimal(100), RoundingMode.HALF_DOWN)
                     .multiply(tipoTransacao.getSinal());
 
-            Transacao transacao = new Transacao(
+            return new Transacao(
                     item.tipo(), null, valorNormalizado,
                     item.cpf(), item.cartao(), null,
                     item.donoDaLoja().trim(), item.nomeDaLoja().trim())
                     .withData(item.data())
                     .withHora(item.hora());
-            return transacao;
         };
     }
 
