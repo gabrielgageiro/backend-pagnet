@@ -101,7 +101,7 @@ public class BatchConfig {
             return new Transacao(
                     item.tipo(), null, valorNormalizado,
                     item.cpf(), item.cartao(), null,
-                    item.donoDaLoja().trim(), item.nomeDaLoja().trim())
+                    item.donoLoja().trim(), item.nomeLoja().trim())
                     .withData(item.data())
                     .withHora(item.hora());
         };

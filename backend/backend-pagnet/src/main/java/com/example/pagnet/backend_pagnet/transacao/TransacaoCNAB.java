@@ -9,8 +9,8 @@ public record TransacaoCNAB(
         String cpf,
         String cartao,
         String hora,
-        String donoDaLoja,
-        String nomeDaLoja
+        String donoLoja,
+        String nomeLoja
 ) {
 
 }
